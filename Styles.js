@@ -3,10 +3,10 @@ import { StyleSheet, Text, View, Image, Button, TextInput, Dimensions } from 're
 
 export const styles = StyleSheet.create({
     container: {
-      flex: 6,
+      padding: 1,
       backgroundColor: '#fff',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
     },
   });
 export const History = StyleSheet.create({
@@ -32,6 +32,10 @@ export const History = StyleSheet.create({
     MessageComponent: {
       flex: 1,
       width: 300,
+    },
+    checkBoxComponent: {
+      flexDirection: 'row',
+      display: 'flex'
     }
   });
   

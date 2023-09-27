@@ -5,10 +5,12 @@ import * as Styles from "./Styles.js";
 import { useDispatch, useSelector } from 'react-redux';
 import { ScrollView, FlatList } from 'react-native';
 import {deleteMessage} from "./Models/history.js";
+import { Ionicons } from '@expo/vector-icons'; 
 
 
 export function MessageScreen({route, navigation}){
     const dispatch = useDispatch();
+    //Turn this into an exportable component maybe add an if statement to use it differently between versions
     const showConfirmDialog = () => {
         if (Platform.OS !== "web"){
         return Alert.alert(
@@ -39,12 +41,14 @@ export function MessageScreen({route, navigation}){
       };
     return (
         <View style={Styles.styles.container}>
-            <Text>Block of text</Text>
-            <Text>{route.params.item.Cipher}</Text>
-            <Text>{route.params.item.displayText}</Text>
-            <Text>{route.params.item.shiftNum}</Text>
-            <Button title = "Delete message" onPress={() => {
+            <Text style={{fontWeight: "bold", fontSize: 20}}>MESSAGE INFO</Text>
+            <Text>Original: {route.params.item.Cipher}</Text>
+            <Text>New: {route.params.item.displayText}</Text>
+            <Text>Key: {route.params.item.shiftNum}</Text>
+            <Ionicons.Button name = "trash-outline"  backgroundColor="#ff5c5c" onPress={() => {
                 showConfirmDialog()
-            }}/>
+            }}>
+              DELETE
+              </Ionicons.Button>
             </View>)
 }

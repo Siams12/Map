@@ -3,15 +3,18 @@ import { StyleSheet, Text, View, Image, Button, TextInput, Dimensions } from 're
 import { useState} from 'react';
 import * as Styles from "./Styles.js";
 import { useEffect } from 'react';
+import Slider from '@react-native-community/slider';
 import { useDispatch, useSelector } from 'react-redux';
 import  {numEncryptedIncrement}  from './Models/stats.js';
 import  {numDecryptedIncrement}  from './Models/stats.js';
 import {addMessage, clearMessages} from "./Models/history.js";
+import { MaterialIcons } from '@expo/vector-icons'; 
 
 export function HomeScreen({navigation}){
   const dispatch = useDispatch();
   const [Cipher, setCipher] = useState('');
-  const [shiftNum, setShiftNum] = useState('');
+  const [shiftNum, setShiftNum] = useState(1);
+  const [sliderValue, setSliderValue] = useState(1);
   const [displayText, setDisplayText] = useState('');
   const numEncrypted = useSelector((state) => state.stats.numEncrypted);
   const numDecrypted = useSelector((state) => state.stats.numDecrypted);
@@ -20,35 +23,53 @@ export function HomeScreen({navigation}){
 
   return (
     <View style={Styles.styles.container}>
-      <Text style = {{fontWeight: "bold", fontSize: 30}}>CAESAR CIPHER ENCODER AND DECODER</Text>
+      <Text style = {{fontWeight: "bold", fontSize: 30, marginBottom: 10}}>CAESAR CIPHER ENCODER AND DECODER</Text>
       <TextInput style={{ padding: 8, backgroundColor: '#f5f5f5'}}
       onChangeText={text => setCipher(text)
       }
       placeholder='Enter message'
       />
-      <TextInput style={{ padding: 8, backgroundColor: '#f5f5f5' }}
+      {/* <TextInput style={{ padding: 8, backgroundColor: '#f5f5f5' }}
       placeholder='Enter key'
       keyboardType='numeric'
       onChangeText={text => setShiftNum(text)}
+      /> */}
+      <Text>Key: {shiftNum}</Text>
+      <Slider
+        style={{ width: 200, marginTop: 10}}
+        minimumValue={1}
+        maximumValue={25}
+        step={1}
+        value={shiftNum}
+        onValueChange={number => setShiftNum(number)}
       />
       <View style= {{flexDirection: "row", paddingTop: 10}}> 
-      <View style = {{paddingRight: 20}}><Button  title='Encrypt'
+      <View style = {{paddingRight: 20}}>
+      <MaterialIcons.Button  name ='enhanced-encryption'
       onPress={() => {
         let temp = encryptdecrypt(true, Cipher, shiftNum)
         setDisplayText(temp)
+        if (temp !=="Parameters invalid. make sure you entered a correct key"){
         dispatch(numEncryptedIncrement)
-        dispatch(addMessage({type: "Encrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp }));
+        dispatch(addMessage({type: "Encrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp, delete: false  }));
+        }
 }}
-      />
+      >
+      Encrypt  
+      </MaterialIcons.Button>
       </View>
-      <Button title='Decrypt'
+      <MaterialIcons.Button name='no-encryption'
       onPress={() => {
         let temp = encryptdecrypt(false, Cipher, shiftNum)
         setDisplayText(temp);
+        if (temp !== "Parameters invalid. make sure you entered a correct key"){
         dispatch(numDecryptedIncrement),
-        dispatch(addMessage({type: "Decrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp }))
+        dispatch(addMessage({type: "Decrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp, delete: false }))
+        }
 }} 
-      />
+      >
+      Decrypt
+      </MaterialIcons.Button>
       </View>
       <Text>{displayText}</Text>
       <StatusBar style="auto" />
@@ -75,6 +96,9 @@ function checkValidNum(num){
  */
 function encryptdecrypt(encrypt, text, shiftNum){
   shiftNum = Number(shiftNum);
+  if (text.length < 1){
+    return "Parameters invalid. make sure you entered a correct key";
+  }
   if (!checkValidNum(shiftNum)){
     return "Parameters invalid. make sure you entered a correct key";
   }
