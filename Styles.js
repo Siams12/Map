@@ -26,8 +26,6 @@ export const History = StyleSheet.create({
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: 'gray',
     },
     MessageComponent: {
       flex: 1,

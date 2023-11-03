@@ -1,175 +1,121 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, Button, TextInput, Dimensions } from 'react-native';
-import { useState} from 'react';
+import { StatusBar } from "expo-status-bar";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Button,
+  TextInput,
+  Dimensions,
+} from "react-native";
+import { useState, useEffect, useRef } from "react";
 import * as Styles from "./Styles.js";
-import { useEffect } from 'react';
-import Slider from '@react-native-community/slider';
-import { useDispatch, useSelector } from 'react-redux';
-import  {numEncryptedIncrement}  from './Models/stats.js';
-import  {numDecryptedIncrement}  from './Models/stats.js';
-import {addMessage, clearMessages} from "./Models/history.js";
-import { MaterialIcons } from '@expo/vector-icons'; 
-
-export function HomeScreen({navigation}){
+import { FlatList, ImageBackground } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import * as Location from "expo-location";
+import MapView,{Marker} from "react-native-maps";
+import { addMarker, deleteMarker, resetMarker } from "./Models/markers.js";
+export function HomeScreen({ navigation }) {
   const dispatch = useDispatch();
-  const [Cipher, setCipher] = useState('');
-  const [shiftNum, setShiftNum] = useState(1);
-  const [sliderValue, setSliderValue] = useState(1);
-  const [displayText, setDisplayText] = useState('');
-  const numEncrypted = useSelector((state) => state.stats.numEncrypted);
-  const numDecrypted = useSelector((state) => state.stats.numDecrypted);
-  
-  const messages = useSelector((state) => state.history.value);
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const markers = useSelector((state) => state.markers.value);
+  const [region, setRegion] = useState({
+    latitude: 39.9937,
+    longitude: -81.734,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  });
+  const regionRef = useRef();
+  regionRef.current = region;
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        // Need some error handling here, exactly what depends on the app
+        return;
+      }
+      await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Highest,
+          distanceInterval: 3,
+        },
+        watchLocation
+      );
+    })();
+  }, []);
 
+  const watchLocation = (location) => {
+    const newRegion = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: regionRef.current.latitudeDelta,
+      longitudeDelta: regionRef.current.longitudeDelta,
+    };
+    setRegion(newRegion);
+  };
+
+  const zoomChanges = (newRegion) => {
+    setRegion(newRegion);
+  };
+
+  const markerTapped = (data) => {
+    console.log(data.nativeEvent.id)
+    }
+    
+  const getMarkers = (item, index) => {
+    return (
+      <Marker
+        key="YourLocation"
+        identifier="YourPreviousLoc"
+        coordinate={item.item.region}
+        title={item.item.title}
+        description={item.item.description}
+        onPress={markerTapped}
+      />
+    );
+  };
+  console.log(markers);
   return (
     <View style={Styles.styles.container}>
-      <Text style = {{fontWeight: "bold", fontSize: 30, marginBottom: 10}}>CAESAR CIPHER ENCODER AND DECODER</Text>
-      <TextInput style={{ padding: 8, backgroundColor: '#f5f5f5'}}
-      onChangeText={text => setCipher(text)
-      }
-      placeholder='Enter message'
-      />
-      {/* <TextInput style={{ padding: 8, backgroundColor: '#f5f5f5' }}
-      placeholder='Enter key'
-      keyboardType='numeric'
-      onChangeText={text => setShiftNum(text)}
-      /> */}
-      <Text>Key: {shiftNum}</Text>
-      <Slider
-        style={{ width: 200, marginTop: 10}}
-        minimumValue={1}
-        maximumValue={25}
-        step={1}
-        value={shiftNum}
-        onValueChange={number => setShiftNum(number)}
-      />
-      <View style= {{flexDirection: "row", paddingTop: 10}}> 
-      <View style = {{paddingRight: 20}}>
-      <MaterialIcons.Button  name ='enhanced-encryption'
-      onPress={() => {
-        let temp = encryptdecrypt(true, Cipher, shiftNum)
-        setDisplayText(temp)
-        if (temp !=="Parameters invalid. make sure you entered a correct key"){
-        dispatch(numEncryptedIncrement)
-        dispatch(addMessage({type: "Encrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp, delete: false  }));
-        }
-}}
+      <MapView
+        style={{ width: "75%", height: "75%" }}
+        initialRegion={region}
+        region={region}
+        onRegionChangeComplete={zoomChanges}
       >
-      Encrypt  
-      </MaterialIcons.Button>
-      </View>
-      <MaterialIcons.Button name='no-encryption'
-      onPress={() => {
-        let temp = encryptdecrypt(false, Cipher, shiftNum)
-        setDisplayText(temp);
-        if (temp !== "Parameters invalid. make sure you entered a correct key"){
-        dispatch(numDecryptedIncrement),
-        dispatch(addMessage({type: "Decrypted" ,Cipher: Cipher, shiftNum: shiftNum, displayText: temp, delete: false }))
-        }
-}} 
-      >
-      Decrypt
-      </MaterialIcons.Button>
-      </View>
-      <Text>{displayText}</Text>
-      <StatusBar style="auto" />
-      </View>
-  )
-}   
-//Check if function inputs a correct number
+        {/* <Marker
+key='userlocation'
+identifier='userlocation'
+coordinate={region}
+title='You'
+description='This is where you are at'
+onPress={markerTapped}
+/> */}
+  <Marker
+    coordinate={{ latitude: 39.9937, longitude: -81.734 }} // Hardcoded coordinates
+    title="Hardcoded Marker"
+    description="This is a hardcoded marker"
+  />
 
-
-function checkValidNum(num){
-  if (num){
-    if (0 <= num && num < 26){
-      return true
-    }
-  }
-  return false;
+        {/* <FlatList
+          data={markers}
+          renderItem={(item, index) => getMarkers(item, index)}
+          keyExtractor={(item, index) => index}
+        /> */}
+      </MapView>
+      <Text>Add a marker!</Text>
+      <TextInput
+        style={{ padding: 8, backgroundColor: "#f5f5f5" }}
+        onChangeText={(text) => setTitle(text)}
+        placeholder="title"
+      />
+      <TextInput
+        style={{ padding: 8, backgroundColor: "#f5f5f5" }}
+        onChangeText={(text) => setDesc(text)}
+        placeholder="description"
+      />
+      <Button title="Add" onPress={() => {dispatch(addMarker({region: region, title: title, description: desc}))}} />
+    </View>
+  );
 }
-/**
- * 
- * @param {boolean} encrypt 
- * @param {String} text 
- * @param {} shiftNum 
- * @returns 
- */
-function encryptdecrypt(encrypt, text, shiftNum){
-  shiftNum = Number(shiftNum);
-  if (text.length < 1){
-    return "Parameters invalid. make sure you entered a correct key";
-  }
-  if (!checkValidNum(shiftNum)){
-    return "Parameters invalid. make sure you entered a correct key";
-  }
-  if (encrypt){
-    return encryption(text,shiftNum)
-  }
-  else{
-    return decryption(text, shiftNum);
-  }
-}
-
-//Uses caesar cipher to encrypt
-function encryption(text, shiftNum){
-  let newWord = [];
-  for (const i in text){
-    char = text[i];
-    //If is a letter
-    if (char.toUpperCase() != char.toLowerCase()){
-      
-      let charCode = text.charCodeAt(i);
-      //If lowercase
-      if(char == char.toLowerCase()){
-        charCode = charCode-97 + shiftNum;
-        newWord[i] = String.fromCharCode((charCode % 26) + 97);
-      }
-      //if uppercase
-      else{
-        charCode = charCode-65 + shiftNum;
-        newWord[i] = String.fromCharCode((charCode % 26) + 65)
-      }
-      
-      }
-      //If a number
-      else {
-        newWord[i] = char;
-      }
-    }
-    return newWord.toString().replaceAll(',', "");
-  }
-  //Decrypt
-  function decryption(text, shiftNum){
-    let newWord = [];
-    for (const i in text){
-      char = text[i];
-      //If isnt a number
-      if (char.toUpperCase() != char.toLowerCase()){
-        let charCode = text.charCodeAt(i);
-        //lowercase
-        if(char == char.toLowerCase()){
-          charCode = charCode-97 - shiftNum; 
-          charCode = fixNegativeMods(charCode);
-          newWord[i] = String.fromCharCode((charCode % 26) + 97);
-        }
-        //uppercase
-        else{
-          charCode = charCode-65 - shiftNum;
-          charCode = fixNegativeMods(charCode);
-          newWord[i] = String.fromCharCode((charCode % 26) + 65)
-        }
-        }
-      //If a number
-      else {
-        newWord[i] = char;
-      }
-      }
-      return newWord.toString().replaceAll(',', "");
-    }
-    //Translate negative javascript mods to be correct
-    function fixNegativeMods(num){
-      if (num < 0){
-        return 26 - Math.abs(num)
-      }
-      return num
-    }

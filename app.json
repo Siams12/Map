@@ -28,7 +28,13 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-localization"
-    ]
+      "expo-localization",
+      [
+      "expo-location",
+      {
+      "locationAlwaysAndWhenInUsePermission": "Allow Cipher to use your location."
+      }
+      ]
+      ]
   }
 }
