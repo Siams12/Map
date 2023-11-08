@@ -7,6 +7,8 @@ import {
   Button,
   TextInput,
   Dimensions,
+  TouchableOpacity, 
+  Alert
 } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import * as Styles from "./Styles.js";
@@ -14,7 +16,7 @@ import { FlatList, ImageBackground } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import * as Location from "expo-location";
 import MapView,{Marker} from "react-native-maps";
-import { addMarker, deleteMarker, resetMarker } from "./Models/markers.js";
+import { addMarker, deleteMarker, resetMarker} from "./Models/markers.js";
 export function HomeScreen({ navigation }) {
   const dispatch = useDispatch();
   const [title, setTitle] = useState("");
@@ -59,23 +61,23 @@ export function HomeScreen({ navigation }) {
     setRegion(newRegion);
   };
 
-  const markerTapped = (data) => {
-    console.log(data.nativeEvent.id)
-    }
-    
-  const getMarkers = (item, index) => {
-    return (
-      <Marker
-        key="YourLocation"
-        identifier="YourPreviousLoc"
-        coordinate={item.item.region}
-        title={item.item.title}
-        description={item.item.description}
-        onPress={markerTapped}
-      />
+  const showConfirm = (id) => {
+    return Alert.alert(
+      "Are your sure?",
+      "This will delete your current marker",
+      [
+        {
+          text: "Yes",
+          onPress: () => {
+            dispatch(deleteMarker(id))
+          },
+        },
+        {
+          text: "No",
+        },
+      ]
     );
-  };
-  console.log(markers);
+    }
   return (
     <View style={Styles.styles.container}>
       <MapView
@@ -84,25 +86,17 @@ export function HomeScreen({ navigation }) {
         region={region}
         onRegionChangeComplete={zoomChanges}
       >
-        {/* <Marker
-key='userlocation'
-identifier='userlocation'
-coordinate={region}
-title='You'
-description='This is where you are at'
-onPress={markerTapped}
-/> */}
-  <Marker
-    coordinate={{ latitude: 39.9937, longitude: -81.734 }} // Hardcoded coordinates
-    title="Hardcoded Marker"
-    description="This is a hardcoded marker"
-  />
-
-        {/* <FlatList
-          data={markers}
-          renderItem={(item, index) => getMarkers(item, index)}
-          keyExtractor={(item, index) => index}
-        /> */}
+      
+      {markers.map(marker => (
+          <Marker
+            key = {marker.id}
+            id = {marker.id}
+            coordinate={{ latitude: marker.region.latitude, longitude: marker.region.longitude }}
+            title={marker.title}
+            description= {marker.description}
+            onPress={() => {showConfirm(marker.id)}}
+          />
+        ))}
       </MapView>
       <Text>Add a marker!</Text>
       <TextInput
@@ -115,7 +109,7 @@ onPress={markerTapped}
         onChangeText={(text) => setDesc(text)}
         placeholder="description"
       />
-      <Button title="Add" onPress={() => {dispatch(addMarker({region: region, title: title, description: desc}))}} />
+      <Button title="Add" onPress={() => {dispatch(addMarker({region: region, title: title, description: desc, id: Math.floor(Math. random() * 1000000) + 1}))}} />
     </View>
   );
 }

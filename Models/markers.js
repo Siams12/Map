@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
+
+//Another instance where I should have used an object but used a list instead.
 const markerSlice = createSlice({
   name: "markers",
   initialState: {
@@ -9,8 +11,13 @@ const markerSlice = createSlice({
     addMarker: (state, action) => {
       state.value.push(action.payload);
     },
+
     deleteMarker: (state, action) => {
-      state.value.splice(action.payload, 1);
+      for (let valueInstance in state.value){
+        if (state?.value[valueInstance]?.id == action.payload){
+          state.value.splice(valueInstance, 1);
+        }
+      }
     },
     resetMarker: (state, action) => {
       state.value = []
